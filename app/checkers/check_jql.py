@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from colorama import Fore, Back, Style
 from .base_checker import BaseChecker
 from ..rest import TreeRest
@@ -9,6 +11,14 @@ log = logging.getLogger("jql checker")
 class CheckJql(BaseChecker):
     def __init__(self, instance: TreeRest):
         super().__init__(instance)
+        self.__errors: defaultdict = defaultdict(lambda: {"matched": [], "no_matched": []})
+
+    @property
+    def errors(self) -> defaultdict:
+        return self.__errors
+
+    def __add_error(self, jql: str, key: str, value: str, should_be_found: bool):
+        self.__errors[jql]["no_matched" if should_be_found else "matched"].append((key, value))
 
     def __run_case_jql(self, jql: str, matches: list, no_matches: list):
         log.info(f"{Back.BLUE}Jql:{Back.RESET} {Fore.GREEN}{jql}{Fore.RESET}")
@@ -18,6 +28,7 @@ class CheckJql(BaseChecker):
             for key in self.get_issues_for_value(matched_value):
                 if key not in issues:
                     log.error(f"{Fore.RED}{key}: {matched_value} not founded, but should!!!{Style.RESET_ALL}")
+                    self.__add_error(jql, key, matched_value, True)
                 else:
                     log.info(f"{key}: {matched_value} founded")
 
@@ -25,6 +36,7 @@ class CheckJql(BaseChecker):
             for key in self.get_issues_for_value(not_matched_value):
                 if key in issues:
                     log.error(f"{Fore.RED}{key}: {not_matched_value} founded, but should not!!!{Style.RESET_ALL}")
+                    self.__add_error(jql, key, not_matched_value, False)
                 else:
                     log.info(f"{key}: {not_matched_value} not founded")
 

@@ -3,6 +3,10 @@
 from app.rest import TreeRest
 from app import test_cases
 from app.checkers import CheckJql
+from app.logger import logging
+from colorama import Fore
+
+log = logging.getLogger("main")
 
 
 single_customfield = "customfield_10000"
@@ -21,15 +25,21 @@ issue_data = {
 def main():
     with TreeRest(single_customfield, multiple_customfield, schema_id, issue_data) as inst:
         checker = CheckJql(inst)
-        checker.prepare_data(test_cases.eq_simple_cases)
-        checker.run()
-
-        checker.prepare_data(test_cases.like_simple_cases)
-        checker.run()
+        # checker.prepare_data(test_cases.eq_simple_cases)
+        # checker.run()
+        #
+        # checker.prepare_data(test_cases.like_simple_cases)
+        # checker.run()
 
         checker.prepare_data(test_cases.like_complex_cases)
         checker.run()
 
+        for jql, errors in checker.errors.items():
+            log.error(f"JQL: {jql}")
+            for key, value in errors['matched']:
+                log.error(f"{Fore.RED}Issue {key} with \"{value}\" founded, but should not!!!{Fore.RESET}")
+            for key, value in errors['no_matched']:
+                log.error(f"{Fore.RED}Issue {key} with \"{value}\" not founded, but should!!!{Fore.RESET}")
         input("press any key")
 
 
