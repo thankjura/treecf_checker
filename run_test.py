@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import random
 from app.rest import TreeRest
 from app import test_cases
 from app.checkers import CheckJql
@@ -26,6 +25,9 @@ def main():
         checker.run()
 
         checker.prepare_data(test_cases.like_simple_cases)
+        checker.run()
+
+        checker.prepare_data(test_cases.like_complex_cases)
         checker.run()
 
         input("press any key")
