@@ -10,8 +10,8 @@ class CheckJql(BaseChecker):
     def __init__(self, instance: TreeRest):
         super().__init__(instance)
 
-    def __run_case(self, jql: str, matches: list, no_matches: list):
-        log.info(f"{Back.BLUE}Start testing jql:{Back.RESET} {Fore.GREEN}{jql}{Fore.RESET}")
+    def __run_case_jql(self, jql: str, matches: list, no_matches: list):
+        log.info(f"{Back.BLUE}Jql:{Back.RESET} {Fore.GREEN}{jql}{Fore.RESET}")
         issues = self.instance.search(jql)
 
         for matched_value in matches:
@@ -28,14 +28,15 @@ class CheckJql(BaseChecker):
                 else:
                     log.info(f"{key}: {not_matched_value} not founded")
 
+    def __run_case(self, operator: str, query: str, matches: list, no_matches: list):
+        log.info(f"{Back.BLUE}Testing single field:{Back.RESET} {self.single_field_jql_name}")
+        jql = f"{self.single_field_jql_name} {operator} \"{query}\""
+        self.__run_case_jql(jql, matches, no_matches)
+        log.info(f"{Back.BLUE}Testing multi field:{Back.RESET} {self.multi_field_jql_name}")
+        jql = f"{self.multi_field_jql_name} {operator} \"{query}\""
+        self.__run_case_jql(jql, matches, no_matches)
+
     def run(self):
         for case in self.test_cases:
-            jql = f"{self.single_field_jql_name} {case['operator']} \"{case['query']}\""
-            self.__run_case(jql, case['matches'], case['no_matches'])
-            jql = f"{self.multi_field_jql_name} {case['operator']} \"{case['query']}\""
-            self.__run_case(jql, case['matches'], case['no_matches'])
-
-            jql = f"{self.single_field_jql_name} !{case['operator']} \"{case['query']}\""
-            self.__run_case(jql, case['no_matches'], case['matches'])
-            jql = f"{self.multi_field_jql_name} !{case['operator']} \"{case['query']}\""
-            self.__run_case(jql, case['no_matches'], case['matches'])
+            self.__run_case(case['operator'], case['query'], case['matches'], case['no_matches'])
+            self.__run_case("!{}".format(case['operator']), case['query'], case['no_matches'], case['matches'])
